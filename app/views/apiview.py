@@ -4,7 +4,7 @@
 # 2017-09-11 11:08
 
 import pymongo
-from flask import request, jsonify
+from flask import request, jsonify, g
 
 from app import mongo
 from app.tools import convert
@@ -28,9 +28,8 @@ def get_articles_intro():
     博客主页请求的数据
     :return:
     """
-    args = request.args
-    page = args.get('page', 1)
-    size = args.get('size', 10)
+    page = g.args.get('page', 1)
+    size = g.args.get('size', 10)
     cursor = convert.paginate(mongo.db.articles.find({'status': 'published'}, {'_id': False, 'content': False, 'status': False, 'markdown': False}), page, size)
     result = list(cursor)
     for item in result:
@@ -40,11 +39,13 @@ def get_articles_intro():
 
 @api.route('/get_article')
 def get_article():
-    uid = request.args['id']
+    uid = g.args['id']
     article = mongo.db.articles.find_one_and_update({'id': uid, 'status': 'published'}, {'$inc': {'browseNumber': 1}}, {'_id': False, 'status': False, 'markdown': False})
     if article is None:
         return '-1', 404
     convert.convert_article_format(article)
+    client_ip = request.environ['REMOTE_ADDR']
+    is_like = client_ip in article['likeIPs']
     return jsonify(article)
 
 
@@ -59,11 +60,10 @@ def get_tags():
 
 
 @api.route('/tags')
-def get_articles_by_tag(tag):
-    args = request.args
-    page = args.get('page', 1)
-    size = args.size('size', 10) if args else 10
-    tag = args['tag']
+def get_articles_by_tag():
+    page = g.args.get('page', 1)
+    size = g.args.size('size', 10)
+    tag = g.args['tag']
     result = convert.paginate(mongo.db.articles.find({'tags': {'$elemMatch': {'name': tag}}, 'status': 'published'},
                                                      {'_id': False, 'markdown': False, 'status': False}), page, size)
     articles = list(result)
@@ -78,8 +78,6 @@ def get_random_img_url():
     前段请求随机的图片 url
     :return:
     """
-    # result = mongo.db['is.files'].aggregate([{'$sample': {'size': 1}}])
-    # return jsonify({'url': url_for('store.get_image_by_oid', oid=result.next()['_id'])})
     result = mongo.db.images.aggregate([{'$sample': {'size': 1}}])
     return jsonify({'url': result.next().get('url', RANDOM_IMG_DEFAULT_URL)})
 
@@ -90,9 +88,8 @@ def get_hot_articles():
     通过点赞数量排序热门文章
     :return:
     """
-    args = request.args
-    page = args.get('page', 1)
-    size = args.get('size', 10)
+    page = g.args.get('page', 1)
+    size = g.args.get('size', 10)
     result = convert.paginate(mongo.db.articles.find({'status': 'published'}, {'_id': False, 'title': True, 'id': True, 'likes': True}),
                               page, size).sort('likes', pymongo.DESCENDING)
     articles = [{'title': item['title'], 'id': item['id']} for item in result]
@@ -101,9 +98,8 @@ def get_hot_articles():
 
 @api.route('/get_projects_intro')
 def get_projects_intro():
-    args = request.args
-    page = args.get('page', 1)
-    size = args.get('size', 10)
+    page = g.args.get('page', 1)
+    size = g.args.get('size', 10)
     result = convert.paginate(mongo.db.projects.find({'isDel': False}, {'_id': False, 'isDel': False}), page, size)
     projects = list(result)
     for item in projects:
@@ -147,7 +143,7 @@ def get_authors_info():
 
 @api.route('/get_project')
 def get_project():
-    uid = request.args['id']
+    uid = g.args['id']
     project = mongo.db.projects.find_one_and_update({'id': uid, 'isDel': False}, {'$inc': {'browseNumber': 1}},
                                                     {'_id': False, 'isDel': False},
                                                     return_document=pymongo.ReturnDocument.AFTER)
@@ -176,5 +172,14 @@ def get_header_nav_info():
 
 @api.route('/like_article')
 def like_article():
-    # TODO 点赞功能
-    pass
+    """
+    点赞功能
+    :return:
+    """
+    uid = g.args['id']
+    client_ip = request.environ['REMOTE_ADDR']
+    # 如果文章存在且未被该 ip 点赞，则点赞
+    result = mongo.db.articles.update_one({'id': uid, 'likeIPs': {'$ne': client_ip}},
+                                          {'$addToSet': {'likeIPs': client_ip}, '$inc': {'likeNumber': 1}}, False)
+    # status == 1 点赞成功，status == 0 文章已被删除
+    return jsonify({'status': 1 if result.raw_result['updatedExisting'] else 0})
