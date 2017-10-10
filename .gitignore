@@ -1,0 +1,10 @@
+upload/
+whoyoungblog/
+__pycache__
+.idea/
+test/
+*.py[cod]
+
+debug.log
+
+blog_secret_key
