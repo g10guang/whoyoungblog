@@ -11,7 +11,7 @@ from app.db.models import Admin
 from app.tools import check
 from app.tools import convert, encrypt
 from app.views import api
-from tools import timeformat
+from app.tools import timeformat
 
 ARTICLE_URL_TEMPLATE = 'http://whoyoung.me/article/{}'
 

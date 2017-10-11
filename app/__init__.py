@@ -20,8 +20,6 @@ log.addHandler(fh)
 
 SECRET_KEY_FILE = 'blog_secret_key'
 
-logging.basicConfig(filename='debug.log', filemode='a', level=logging.INFO, format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%a, %d %b %Y %H:%M:%S')
-
 app = Flask('whoyoungblog')
 
 # gunicorn 同时启动多个 Flask 进程，只要 SECRET_KEY 保持一致，就可以共享 session

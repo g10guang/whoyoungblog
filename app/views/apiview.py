@@ -34,7 +34,8 @@ def get_articles_intro():
     cursor = convert.paginate(mongo.db.articles.find({'status': 'published'},
                                                      {'_id': False, 'content': False, 'status': False, 'markdown': False, 'comments': False}), page, size)
     articles = list(cursor)
-    convert.is_like(articles)
+    for item in articles:
+        convert.is_like(item)
     return jsonify(articles)
 
 

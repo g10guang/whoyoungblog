@@ -90,8 +90,7 @@ def is_author_format(author):
     return True
 
 
-def is_like(items):
+def is_like(item):
     client_ip = request.environ['REMOTE_ADDR']
-    for item in items:
-        item['isLiked'] = client_ip in item['likeIPs']
-    return items
+    item['isLiked'] = client_ip in item['likeIPs']
+    return item
