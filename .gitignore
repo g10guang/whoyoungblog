@@ -5,6 +5,6 @@ __pycache__
 test/
 *.py[cod]
 
-debug.log
+app/debug.log
 
-blog_secret_key
+app/blog_secret_key

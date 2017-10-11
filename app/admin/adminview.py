@@ -6,12 +6,11 @@ from flask import request, g, jsonify, session, url_for
 from flask_login import login_required, current_user, login_user, logout_user
 from pymongo.errors import DuplicateKeyError
 
-from app import login_manager, mongo, log
+from app import login_manager, mongo
 from app.db.models import Admin
 from app.tools import check
 from app.tools import convert, encrypt
 from app.views import api
-from app.admin import wrapper
 from tools import timeformat
 
 ARTICLE_URL_TEMPLATE = 'http://whoyoung.me/article/{}'
