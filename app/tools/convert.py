@@ -3,9 +3,8 @@
 # author: Xiguang Liu<g10guang@foxmail.com>
 # 2017-09-11 18:33
 
-from flask import make_response
+from flask import request
 import pymongo
-import functools
 
 
 def convert_ObjectId2str(item):
@@ -26,35 +25,6 @@ def paginate(items, page, size):
     if isinstance(size, str):
         size = int(size)
     return items.skip((page - 1) * size).limit(size).sort('_id', pymongo.DESCENDING)
-
-
-def convert_article_format(article):
-    """
-    转换 article 格式为前段需要格式
-    :param article:
-    :return:
-    """
-    parse_time_format(article)
-    # item['articleURL'] = url_for('get_article', uid=item['id'])
-    # tags = item['tags']
-    # tmp = list()
-    # for t in tags:
-    #     tmp.append({'title': t, 'url': url_for('get_articles_by_tag', tag=t)})
-    # item['tags'] = tmp
-    return article
-
-
-def convert_user_format(user):
-    user['signUpTime'] = user['signUpTime'].strftime('%Y-%m-%d %H:%M')
-
-
-def parse_time_format(item):
-    """
-    转化时间格式
-    :param item:
-    :return:
-    """
-    item['createdTime'] = item['createdTime'].strftime('%Y-%m-%d %H:%M')
 
 
 def build_url(server_name, url):
@@ -120,10 +90,8 @@ def is_author_format(author):
     return True
 
 
-def mock_response_header_for_test(func):
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        result = func(*args, **kwargs)
-        response = make_response(result)
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        return response
+def is_like(items):
+    client_ip = request.environ['REMOTE_ADDR']
+    for item in items:
+        item['liked'] = client_ip in item['likeIPs']
+    return items

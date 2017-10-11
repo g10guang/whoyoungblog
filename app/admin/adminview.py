@@ -1,4 +1,3 @@
-import datetime
 import hashlib
 import hmac
 import uuid
@@ -12,7 +11,8 @@ from app.db.models import Admin
 from app.tools import check
 from app.tools import convert, encrypt
 from app.views import api
-
+from app.admin import wrapper
+from tools import timeformat
 
 ARTICLE_URL_TEMPLATE = 'http://whoyoung.me/article/{}'
 
@@ -72,7 +72,7 @@ def register():
     intro_img_url = g.json['introImgURL']
     social_account = g.json['socialAccount']
     user_id = username       # 未来可以自定义 id，类似微信的自定义 id
-    sign_up_time = datetime.datetime.utcnow()
+    sign_up_time = timeformat.get_now_strformat()
     # 第一次插入
     try:
         # 先简答处理，后面需要对数据进行建模
@@ -109,7 +109,7 @@ def upload_post():
         tags.append({'name': item, 'id': item})
     uid = uuid.uuid4().hex
     post = {'title': g.json['title'], 'tags': tags,
-            'intro': g.json.get('intro', ''), 'createdTime': datetime.datetime.utcnow(),
+            'intro': g.json.get('intro', ''), 'createdTime': timeformat.get_now_strformat(),
             'content': g.json['content'], 'markdown': g.json['markdown'],
             'author': {'username': g.user.username, 'email': g.user.email, 'id': g.user.username}, 'id': uid,
             'status': g.json.get('status', 'published'), 'rate': 4,
@@ -137,7 +137,7 @@ def upload_project():
         return '-1'
     project = {'name': g.json['name'], 'projectURL': g.json['projectURL'], 'intro': g.json['intro'],
                'author': author, 'tags': tags, 'browseNumber': 0, 'id': uid, 'isDel': False,
-               'createdTime': datetime.datetime.utcnow()}
+               'createdTime': timeformat.get_now_strformat()}
     mongo.db.projects.insert_one(project)
     return url_for('get_project', uid=uid)
 
@@ -157,7 +157,6 @@ def update_navinfo():
 def get_article_by_id():
     uid = g.args['id']
     article = mongo.db.articles.find_one({'id': uid}, {'_id': False})
-    convert.convert_article_format(article)
     return jsonify(article)
 
 
@@ -173,10 +172,7 @@ def delete_article():
 @login_required
 def get_articles_by_username():
     result = mongo.db.articles.find({'author.name': g.user.username}, {'_id': False, 'markdown': False, 'content': False})
-    articles = list()
-    for item in result:
-        convert.convert_article_format(item)
-        articles.append(item)
+    articles = list(result)
     return jsonify(articles)
 
 
@@ -217,7 +213,6 @@ def get_article_list():
     result = convert.paginate(mongo.db.articles.find({}, {'_id': False, 'content': False, 'markdown': False}), page, size)
     articles = list(result)
     for item in articles:
-        convert.convert_article_format(item)
         item['author'] = item['author']['username']
     return jsonify({'list': articles, 'total': len(articles)})
 
@@ -253,7 +248,6 @@ def edit_user():
 def get_user_by_name():
     username = g.args['username']
     user = mongo.db.admins.find_one({'username': username}, {'_id': False, 'cryptPassword': False})
-    convert.convert_user_format(user)
     articles = mongo.db.articles.find({'author.id': user['id']}, {'_id': False, 'title': True, 'id': True})
     user['articles'] = list(articles)
     return jsonify(user)

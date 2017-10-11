@@ -4,7 +4,7 @@
 # 2017-09-11 11:08
 
 import pymongo
-from flask import request, jsonify, g
+from flask import request, jsonify, g, abort
 
 from app import mongo
 from app.tools import convert
@@ -30,11 +30,12 @@ def get_articles_intro():
     """
     page = g.args.get('page', 1)
     size = g.args.get('size', 10)
-    cursor = convert.paginate(mongo.db.articles.find({'status': 'published'}, {'_id': False, 'content': False, 'status': False, 'markdown': False}), page, size)
-    result = list(cursor)
-    for item in result:
-        convert.convert_article_format(item)
-    return jsonify(result)
+
+    cursor = convert.paginate(mongo.db.articles.find({'status': 'published'},
+                                                     {'_id': False, 'content': False, 'status': False, 'markdown': False, 'comments': False}), page, size)
+    articles = list(cursor)
+    convert.is_like(articles)
+    return jsonify(articles)
 
 
 @api.route('/get_article')
@@ -42,10 +43,8 @@ def get_article():
     uid = g.args['id']
     article = mongo.db.articles.find_one_and_update({'id': uid, 'status': 'published'}, {'$inc': {'browseNumber': 1}}, {'_id': False, 'status': False, 'markdown': False})
     if article is None:
-        return '-1', 404
-    convert.convert_article_format(article)
-    client_ip = request.environ['REMOTE_ADDR']
-    is_like = client_ip in article['likeIPs']
+        return abort(404)
+    convert.is_like(article)
     return jsonify(article)
 
 
@@ -67,8 +66,6 @@ def get_articles_by_tag():
     result = convert.paginate(mongo.db.articles.find({'tags': {'$elemMatch': {'name': tag}}, 'status': 'published'},
                                                      {'_id': False, 'markdown': False, 'status': False}), page, size)
     articles = list(result)
-    for item in articles:
-        convert.parse_time_format(item)
     return jsonify(articles)
 
 
@@ -102,8 +99,6 @@ def get_projects_intro():
     size = g.args.get('size', 10)
     result = convert.paginate(mongo.db.projects.find({'isDel': False}, {'_id': False, 'isDel': False}), page, size)
     projects = list(result)
-    for item in projects:
-        convert.parse_time_format(item)
     return jsonify(projects)
 
 
@@ -170,10 +165,10 @@ def get_header_nav_info():
     return jsonify(navinfo)
 
 
-@api.route('/like_article')
+@api.route('/like_article', methods=['POST'])
 def like_article():
     """
-    点赞功能
+    点赞文章功能
     :return:
     """
     uid = g.args['id']
@@ -182,4 +177,17 @@ def like_article():
     result = mongo.db.articles.update_one({'id': uid, 'likeIPs': {'$ne': client_ip}},
                                           {'$addToSet': {'likeIPs': client_ip}, '$inc': {'likeNumber': 1}}, False)
     # status == 1 点赞成功，status == 0 文章已被删除
+    return jsonify({'status': 1 if result.raw_result['updatedExisting'] else 0})
+
+
+@api.route('/comment_article', methods=['POST'])
+def comment_article():
+    """
+    评论文章功能
+    :return:
+    """
+    uid = g.json['id']
+    email = g.json['email']
+    comment = g.json['comment']
+    result = mongo.db.articles.update_one({'id': uid}, {'$addToSet': {'comments': {'email': email, 'comment': comment}}}, False)
     return jsonify({'status': 1 if result.raw_result['updatedExisting'] else 0})
