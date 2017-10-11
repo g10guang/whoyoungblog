@@ -41,7 +41,7 @@ def get_articles_intro():
 
 @api.route('/get_article')
 def get_article():
-    uid = g.args['id']
+    uid = g.json['id']
     article = mongo.db.articles.find_one_and_update({'id': uid, 'status': 'published'}, {'$inc': {'browseNumber': 1}}, {'_id': False, 'status': False, 'markdown': False})
     if article is None:
         return abort(404)
@@ -173,7 +173,7 @@ def like_article():
     :return:
     """
     uid = g.args['id']
-    client_ip = request.environ['REMOTE_ADDR']
+    client_ip = request.headers['X-Real-IP']
     # 如果文章存在且未被该 ip 点赞，则点赞
     result = mongo.db.articles.update_one({'id': uid, 'likeIPs': {'$ne': client_ip}},
                                           {'$addToSet': {'likeIPs': client_ip}, '$inc': {'likeNumber': 1}}, False)
