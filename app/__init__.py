@@ -44,6 +44,7 @@ from app.views import api, store
 
 from app.views import apiview, objectstore
 from app.admin import adminview
+from app.search import searchapi
 
 # Note: register blueprint should after import the views.
 app.register_blueprint(store)

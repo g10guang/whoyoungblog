@@ -21,10 +21,8 @@ def paginate(items, page, size):
     :param size:
     :return:
     """
-    if isinstance(page, str):
-        page = int(page)
-    if isinstance(size, str):
-        size = int(size)
+    page = int(page)
+    size = int(size)
     return items.skip((page - 1) * size).limit(size).sort('_id', pymongo.DESCENDING)
 
 

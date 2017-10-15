@@ -116,7 +116,7 @@ def upload_post():
             'content': g.json['content'], 'markdown': g.json['markdown'],
             'author': {'username': g.user.username, 'email': g.user.email, 'id': g.user.username}, 'id': uid,
             'status': g.json.get('status', 'published'), 'rate': 4,
-            'browseNumber': 0, 'commentNumber': 0, 'likeNumber': 0}
+            'browseNumber': 0, 'commentNumber': 0, 'likeNumber': 0, 'comment': []}
     mongo.db.articles.insert_one(post)
     return jsonify({'status': 1, 'url': ARTICLE_URL_TEMPLATE.format(uid)})
 
