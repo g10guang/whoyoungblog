@@ -4,11 +4,14 @@
 # 2017-09-11 11:08
 
 import pymongo
+import uuid
 from flask import request, jsonify, g, abort
 
 from app import mongo
-from app.tools import convert
+from app.tools import convert, timeformat
 from app.views import api, RANDOM_IMG_DEFAULT_URL
+from app.tools import info
+from app.tools import articletool
 
 
 @api.after_request
@@ -41,7 +44,7 @@ def get_articles_intro():
 
 @api.route('/get_article')
 def get_article():
-    uid = g.json['id']
+    uid = g.args['id']
     article = mongo.db.articles.find_one_and_update({'id': uid, 'status': 'published'}, {'$inc': {'browseNumber': 1}}, {'_id': False, 'status': False, 'markdown': False})
     if article is None:
         return abort(404)
@@ -173,7 +176,7 @@ def like_article():
     :return:
     """
     uid = g.args['id']
-    client_ip = request.headers['X-Real-IP']
+    client_ip = info.get_client_ip()
     # 如果文章存在且未被该 ip 点赞，则点赞
     result = mongo.db.articles.update_one({'id': uid, 'likeIPs': {'$ne': client_ip}},
                                           {'$addToSet': {'likeIPs': client_ip}, '$inc': {'likeNumber': 1}}, False)
@@ -181,14 +184,53 @@ def like_article():
     return jsonify({'status': 1 if result.raw_result['updatedExisting'] else 0})
 
 
-@api.route('/comment_article', methods=['POST'])
-def comment_article():
+@api.route('/publish_comment', methods=['POST'])
+def publish_comment():
     """
     评论文章功能
     :return:
     """
-    uid = g.json['id']
-    email = g.json['email']
-    comment = g.json['comment']
-    result = mongo.db.articles.update_one({'id': uid}, {'$addToSet': {'comments': {'email': email, 'comment': comment}}}, False)
+    article_id = g.json['id']      # 文章 id
+    new_comment = g.json['comment']
+    title = new_comment['title']
+    content = new_comment['content']
+    email = new_comment['email']
+    username = new_comment['username']
+    uid = uuid.uuid4().hex      # 评论的 id
+    user_id = uuid.uuid4().hex  # 评论用户的 id
+    comment_id = new_comment['commentId']
+    now_str = timeformat.get_now_strformat()
+    # 待插进数据库的 comment
+    comment = {'id': uid, 'title': title, 'createdTime': now_str, 'lastModifiedTime': now_str, 'content': content,
+               'from': {'userId': user_id, 'username': username, 'email': email}}
+    # 判断是评论文章还是回复评论
+    if not comment_id:
+        # 评论文章
+        comment['childrenComments'] = []
+        # 将新评论放在首位
+        result = mongo.db.articles.update_one({'id': article_id, 'status': 'published'}, {'$push': {'comments': {'$each': [comment], '$position': 0}}}, False)
+    else:
+        # 回复评论
+        article_comment = mongo.db.articles.find_one({'id': article_id, 'status': 'published'}, {'_id': False, 'comments': True})
+        # 寻找 target 中的 username userId email 等信息
+        tmp = articletool.find_from_tag_by_comment_id(comment_id, article_comment['comments'])
+        if not tmp:
+            # 参数错误
+            abort(400)
+        from_tag, top_comment_id = tmp
+        if not from_tag:
+            # 回复的评论已经不存在
+            abort(404)
+        target_user_id = from_tag['userId']
+        target_username = from_tag['username']
+        target_email = from_tag['email']
+        comment['target'] = {'commentId': comment_id, 'userId': target_user_id, 'username': target_username, 'email': target_email}
+        result = mongo.db.articles.update_one({'id': article_id, 'status': 'published', 'comments.id': top_comment_id}, {'$push': {'comments.$.childrenComments': comment}})
     return jsonify({'status': 1 if result.raw_result['updatedExisting'] else 0})
+
+
+@api.route('/get_comments')
+def get_comments():
+    article_id = g.args['id']
+    article = mongo.db.articles.find_one({'id': article_id}, {'_id': False, 'comments': True})
+    return jsonify({'comments': article['comments']})

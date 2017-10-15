@@ -5,6 +5,7 @@
 
 from flask import request
 import pymongo
+from app.tools import info
 
 
 def convert_ObjectId2str(item):
@@ -91,6 +92,6 @@ def is_author_format(author):
 
 
 def is_like(item):
-    client_ip = request.environ['REMOTE_ADDR']
+    client_ip = info.get_client_ip()
     item['isLiked'] = client_ip in item['likeIPs']
     return item

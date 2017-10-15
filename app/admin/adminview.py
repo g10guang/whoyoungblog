@@ -2,7 +2,7 @@ import hashlib
 import hmac
 import uuid
 
-from flask import request, g, jsonify, session, url_for
+from flask import request, g, jsonify, session, url_for, abort
 from flask_login import login_required, current_user, login_user, logout_user
 from pymongo.errors import DuplicateKeyError
 
@@ -38,11 +38,15 @@ def load_user(oid):
 
 @api.route('/login_by_username', methods=['POST'])
 def login():
+    # 如果没有盐，那么可以肯定流程出错
+    if 'salt' not in session:
+        abort(404)
     # POST. 取出 POST 请求参数
     username = g.json['username']
     psw = g.json['password']
     admin = Admin.find_by_username(username)
     hash_psw = hmac.new(session['salt'].encode(), admin.cryptPassword.encode(), hashlib.md5).hexdigest()
+    del session['salt']
     # 密码相等
     if hash_psw == psw:
         login_user(admin, remember=True)
@@ -77,7 +81,7 @@ def register():
         # 先简答处理，后面需要对数据进行建模
         mongo.db.admins.insert({'email': email, 'cryptPassword': psw, 'username': username, 'intro': intro,
                                 'oneText': one_text, 'introImgURL': intro_img_url, 'socialAccount': social_account,
-                                'id': user_id, 'signUpTime': sign_up_time})
+                                'id': user_id, 'signUpTime': sign_up_time, 'is_admin': False})
     except DuplicateKeyError:
         # 反馈失败原因
         # check.py username, email, id exist or not.
