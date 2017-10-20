@@ -47,27 +47,21 @@ with app.app_context():
 
 login_manager = LoginManager(app)
 
-from app.views import api, store
-
-from app.views import apiview, objectstore
+# import blue print and api view
+from app.views import apiview
 from app.admin import adminview
-from app.search import searchapi
-from app.msg import apimsg
+from app.msg import msgview
+from app.store import storeview
+from app.search import searchview
+from app.views import api
+from app.store import store
 
 # Note: register blueprint should after import the views.
-app.register_blueprint(store)
 app.register_blueprint(api)
+app.register_blueprint(store)
 
 # 生产环境，设置 Sentry 错误报告
 BLOG_MODE = os.environ.get('BLOG_MODE')
 if BLOG_MODE == 'PRODUCT':
     from raven.contrib.flask import Sentry
     sentry = Sentry(app)
-
-
-# from flask_mail import Message
-#
-# with app.app_context():
-#     msg = Message('hello', recipients=['g10guang@foxmail.com'], charset='utf-8')
-#     msg.html = '<h1>你最近还好吗!!!</h1>'.encode('utf-8')
-#     mail.send(msg)

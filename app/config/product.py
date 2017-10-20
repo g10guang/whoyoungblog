@@ -15,3 +15,4 @@ class ProductConfig(Config):
     SERVER_NAME = 'whoyoung.me'
 
     REMEMBER_COOKIE_DOMAIN = '.whoyoung.me'
+

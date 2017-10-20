@@ -5,8 +5,6 @@
 
 from flask import Blueprint
 
-store = Blueprint('store', 'store', subdomain='store')
-
 api = Blueprint('api', 'api', subdomain='api')
 
 RANDOM_IMG_DEFAULT_URL = 'http://uk.france.fr/sites/default/files/imagecache/ATF_Image_bandeau_v2/la_france_cote_nature_1.jpg'

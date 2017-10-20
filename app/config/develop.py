@@ -15,4 +15,3 @@ class DevelopConfig(Config):
     SERVER_NAME = 'hello.com:5000'
 
     REMEMBER_COOKIE_DOMAIN = '.hello.com'
-
