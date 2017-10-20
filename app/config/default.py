@@ -32,3 +32,20 @@ class Config:
 
     # flask-login token name
     REMEMBER_COOKIE_NAME = 'UserToken'
+
+    # 设置邮箱
+    MAIL_SERVER = 'smtp.exmail.qq.com'
+
+    MAIL_PORT = 465
+
+    MAIL_USE_SSL = True
+
+    MAIL_USE_TLS = False
+
+    MAIL_USERNAME = os.environ.get('BLOG_MAIL_USERNAME', 'admin@whoyoung.me')
+
+    MAIL_PASSWORD = os.environ.get('BLOG_MAIL_PASSWORD', 'Whoyoung734')
+
+    MAIL_DEFAULT_SENDER = MAIL_USERNAME
+
+    MAIL_DEBUG = False      # 关闭 flask-mail 中连接中产生的大量日志

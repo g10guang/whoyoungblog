@@ -6,6 +6,8 @@ from flask_login import LoginManager
 from flask_pymongo import PyMongo
 
 from app.config import load_config
+from flask_mail import Mail
+from email import charset
 
 # 配置日志
 import logging
@@ -34,6 +36,11 @@ app.config.from_object(load_config())
 
 mongo = PyMongo(app, config_prefix='MONGODB')
 
+# 设置 flask_mail
+mail = Mail(app)
+
+charset.add_charset('utf-8', charset.SHORTEST, charset.BASE64, 'utf-8')
+
 with app.app_context():
     fs_grid = gridfs.GridFS(mongo.db, collection='fs')
     is_grid = gridfs.GridFS(mongo.db, collection='is')
@@ -57,3 +64,10 @@ if BLOG_MODE == 'PRODUCT':
     from raven.contrib.flask import Sentry
     sentry = Sentry(app)
 
+
+# from flask_mail import Message
+#
+# with app.app_context():
+#     msg = Message('hello', recipients=['g10guang@foxmail.com'], charset='utf-8')
+#     msg.html = '<h1>你最近还好吗!!!</h1>'.encode('utf-8')
+#     mail.send(msg)
