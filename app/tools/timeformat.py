@@ -12,3 +12,10 @@ def get_now_strformat():
     :return:
     """
     return datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
+
+
+def create_time_id():
+    """
+    产生与时间相关的 id
+    :return:
+    """

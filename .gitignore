@@ -8,3 +8,5 @@ test/
 blog_secret_key
 
 debug.log
+
+std.txt

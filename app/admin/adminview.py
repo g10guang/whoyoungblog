@@ -44,7 +44,11 @@ def login():
     # POST. 取出 POST 请求参数
     username = g.json['username']
     psw = g.json['password']
-    admin = Admin.find_by_username(username)
+    try:
+        admin = Admin.find_by_username(username)
+    except TypeError:
+        # 该用户名不存在
+        return jsonify({'status': -1})
     hash_psw = hmac.new(session['salt'].encode(), admin.cryptPassword.encode(), hashlib.md5).hexdigest()
     del session['salt']
     # 密码相等
@@ -74,7 +78,7 @@ def register():
     one_text = g.json['oneText']
     intro_img_url = g.json['introImgURL']
     social_account = g.json['socialAccount']
-    user_id = username       # 未来可以自定义 id，类似微信的自定义 id
+    user_id = g.json['id']       # 用户自定义 id
     sign_up_time = timeformat.get_now_strformat()
     # 第一次插入
     try:
@@ -82,6 +86,9 @@ def register():
         mongo.db.admins.insert({'email': email, 'cryptPassword': psw, 'username': username, 'intro': intro,
                                 'oneText': one_text, 'introImgURL': intro_img_url, 'socialAccount': social_account,
                                 'id': user_id, 'signUpTime': sign_up_time, 'is_admin': False})
+        # 插入消息通知数据表
+        mongo.db.msgs.insert({'userId': user_id, 'msg': []})
+        return {'status': 1}
     except DuplicateKeyError:
         # 反馈失败原因
         # check.py username, email, id exist or not.
@@ -116,7 +123,7 @@ def upload_post():
             'content': g.json['content'], 'markdown': g.json['markdown'],
             'author': {'username': g.user.username, 'email': g.user.email, 'id': g.user.username}, 'id': uid,
             'status': g.json.get('status', 'published'), 'rate': 4,
-            'browseNumber': 0, 'commentNumber': 0, 'likeNumber': 0, 'comment': []}
+            'browseNumber': 0, 'commentNumber': 0, 'likeNumber': 0, 'comment': [], 'likeIPs': []}
     mongo.db.articles.insert_one(post)
     return jsonify({'status': 1, 'url': ARTICLE_URL_TEMPLATE.format(uid)})
 

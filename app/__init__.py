@@ -45,13 +45,15 @@ from app.views import api, store
 from app.views import apiview, objectstore
 from app.admin import adminview
 from app.search import searchapi
+from app.msg import apimsg
 
 # Note: register blueprint should after import the views.
 app.register_blueprint(store)
 app.register_blueprint(api)
 
 # 生产环境，设置 Sentry 错误报告
-if os.environ.get('BLOG_MODE') == 'PRODUCT':
+BLOG_MODE = os.environ.get('BLOG_MODE')
+if BLOG_MODE == 'PRODUCT':
     from raven.contrib.flask import Sentry
     sentry = Sentry(app)
 

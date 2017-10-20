@@ -17,6 +17,6 @@ def search_articles():
     # db.articles.find({$text: {$search: 'launch.json'}}).pretty()
     result = convert.paginate(
         mongo.db.articles.find({'$text': {'$search': keyword}, 'status': 'published'},
-                               {'_id': False, 'content': False, 'markdown': False, 'likeIPs': False, 'comments': False}), page, size)
+                               {'_id': False, 'content': False, 'markdown': False, 'likeIPs': False, 'comments': False, 'status': False}), page, size)
     articles = list(result)
     return jsonify({'articles': articles})

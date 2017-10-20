@@ -12,6 +12,7 @@ from app.tools import convert, timeformat
 from app.views import api, RANDOM_IMG_DEFAULT_URL
 from app.tools import info
 from app.tools import articletool
+from app.msg import msgtools
 
 
 @api.after_request
@@ -175,7 +176,7 @@ def like_article():
     点赞文章功能
     :return:
     """
-    uid = g.args['id']
+    uid = g.json['id']
     client_ip = info.get_client_ip()
     # 如果文章存在且未被该 ip 点赞，则点赞
     result = mongo.db.articles.update_one({'id': uid, 'likeIPs': {'$ne': client_ip}},
@@ -226,6 +227,11 @@ def publish_comment():
         target_email = from_tag['email']
         comment['target'] = {'commentId': comment_id, 'userId': target_user_id, 'username': target_username, 'email': target_email}
         result = mongo.db.articles.update_one({'id': article_id, 'status': 'published', 'comments.id': top_comment_id}, {'$push': {'comments.$.childrenComments': comment}})
+    # 更新文章的历史评论数
+    mongo.db.articles.find_one_and_update({'id': article_id}, {'$inc': {'commentNumber': 1}})
+    # 追加通知消息
+    article = mongo.db.articles.find_one({'id': article_id}, {'_id': False, 'author': True, 'title': True})
+    msgtools.store_msg(article['author']['id'], '你的文章：{}，有新评论：{}'.format(article['title'], content))
     return jsonify({'status': 1 if result.raw_result['updatedExisting'] else 0})
 
 
