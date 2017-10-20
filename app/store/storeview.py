@@ -63,6 +63,7 @@ def store_file():
     """
     try:
         file = request.files['file']
+        # owner 记录 user _id
         oid = fs_grid.put(file, content_type=file.headers['Content-Type'], owner=current_user._id, filename=file.filename)
         url = convert.build_url(STORE_DOMAIN, url_for('store.get_file_by_oid', id=str(oid)))
         return url
@@ -103,6 +104,7 @@ def store_image():
     """
     try:
         image = request.files['image']
+        # owner 记录 user _id
         oid = is_grid.put(image, content_type=image.headers['Content-Type'], owner=current_user._id, filename=image.filename)
         url = convert.build_url(STORE_DOMAIN, url_for('store.get_image_by_oid', id=str(oid)))
         return url

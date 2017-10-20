@@ -14,17 +14,17 @@ class Config:
 
     BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
 
-    MONGODB_DBNAME = 'whoyoungblog'
+    MONGO_DBNAME = 'whoyoungblog'
 
-    MONGODB_HOST = os.environ.get('MONGODB_HOST', '127.0.0.1')
+    MONGO_HOST = os.environ.get('MONGODB_HOST', '127.0.0.1')
 
-    MONGODB_USERNAME = os.environ.get('MONGODB_USERNAME', '')
+    MONGO_USERNAME = os.environ.get('MONGO_USERNAME', '')
 
-    MONGODB_PASSWORD = os.environ.get('MONGODB_PASSWORD', '')
+    MONGO_PASSWORD = os.environ.get('MONGO_PASSWORD', '')
 
-    MONGODB_PORT = os.environ.get('MONGODB_PORT', 27017)
+    MONGO_PORT = os.environ.get('MONGODB_PORT', 27017)
 
-    MONGODB_AUTH_MECHANISM = 'SCRAM-SHA-1'
+    MONGO_AUTH_MECHANISM = 'SCRAM-SHA-1'
 
     # declare what SERVER_NAME we use. This is for subdomain service.
 

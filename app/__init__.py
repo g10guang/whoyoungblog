@@ -31,10 +31,10 @@ if not os.path.exists(SECRET_KEY_FILE):
 with open(SECRET_KEY_FILE, 'br') as f:
     app.secret_key = f.read()  # session 用的 secret_key
 
-
+# 注意该配置文件的加载位置，该配置文件加载顺序要尽量靠前
 app.config.from_object(load_config())
 
-mongo = PyMongo(app, config_prefix='MONGODB')
+mongo = PyMongo(app, config_prefix='MONGO')
 
 # 设置 flask_mail
 mail = Mail(app)
