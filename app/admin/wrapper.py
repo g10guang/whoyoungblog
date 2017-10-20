@@ -17,8 +17,8 @@ def admin_only(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         try:
-            # only when current_user.is_admin == True, declare this user is admin.
-            if current_user.is_admin:
+            # only when current_user.type == 'admin', declare this user is admin.
+            if current_user.type == 'admin':
                 return func(*args, **kwargs)
         except AttributeError:
             return abort(401)
