@@ -262,6 +262,43 @@ def verify_user_format(user):
         return -3
 
 
+def verify_edit_article_format(article):
+    """
+    检查更改文章字段的信息
+    :return:
+    """
+    try:
+        assert isinstance(article['intro'], str)
+        assert verify_article_status(article['status'])
+        assert isinstance(article['title'], str)
+        assert isinstance(article['tags'], list)
+        for t in article['tags']:
+            assert isinstance(t, str)
+    except KeyError:
+        # 缺少关键字
+        return -1
+    except AssertionError:
+        # 字段类型不对
+        return -2
+    else:
+        if len(article) == 4:
+            return 0
+        # 附带了某些没有定义的字段
+        return -3
+
+
+def check_str_contain_chinese(words):
+    """
+    检测字符串是否包含中文
+    :param string:
+    :return:
+    """
+    for ch in words:
+        if 0x4e00 <= ord(ch) <= 0x9fff:
+            return True
+    return False
+
+
 if __name__ == '__main__':
     from bson.objectid import ObjectId
 

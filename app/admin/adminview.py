@@ -86,7 +86,7 @@ def register():
         user = {'email': email, 'cryptPassword': psw, 'username': username, 'intro': intro, 'oneText': one_text,
                 'introImgURL': intro_img_url, 'socialAccount': social_account, 'id': user_id,
                 'signUpTime': sign_up_time, 'type': 'admin', 'status': 'normal'}
-        if check.verify_user_format(user):
+        if check.verify_user_format(user) == 0:
             mongo.db.admins.insert(user)
             # 插入消息通知数据表
             mongo.db.msgs.insert({'userId': user_id, 'msg': []})
@@ -118,7 +118,8 @@ def upload_post():
     if not isinstance(t, list):
         return jsonify({'status': 0})
     tags = list()
-    for item in t:
+    # 转化为 set 防止 tags 重复
+    for item in set(t):
         # 因为跨域名问题，所以这里只能够手动拼 url
         tags.append({'name': item, 'id': item})
     uid = uuid.uuid4().hex
@@ -127,9 +128,10 @@ def upload_post():
             'content': g.json['content'], 'markdown': g.json['markdown'],
             'author': {'username': g.user.username, 'email': g.user.email, 'id': g.user.username}, 'id': uid,
             'status': g.json.get('status', 'published'), 'rate': 4,
-            'browseNumber': 0, 'commentNumber': 0, 'likeNumber': 0, 'comment': [], 'likeIPs': []}
-    if check.verify_article_format(post):
+            'browseNumber': 0, 'commentNumber': 0, 'likeNumber': 0, 'comments': [], 'likeIPs': []}
+    if check.verify_article_format(post) == 0:
         mongo.db.articles.insert_one(post)
+        mongo.db.admins.update_one({'id': g.user.id}, {'$inc': {'articleNumber': 1}})
         return jsonify({'status': 1, 'url': ARTICLE_URL_TEMPLATE.format(uid)})
     # 在产品运行中，已确保接口对上，所有如果 status: -3 证明被攻击或者版本不对
     return jsonify({'status': -3, 'msg': 'Something Error'})
@@ -145,7 +147,7 @@ def upload_project():
     if not isinstance(t, list):
         return '-1'
     tags = list()
-    for item in t:
+    for item in set(t):
         # 因为跨域名问题，所以这里只能够手动拼 url
         tags.append({'name': item, 'url': '/tags/{}'.format(item)})
     uid = uuid.uuid4().hex
@@ -155,7 +157,7 @@ def upload_project():
     project = {'name': g.json['name'], 'projectURL': g.json['projectURL'], 'intro': g.json['intro'],
                'author': author, 'tags': tags, 'browseNumber': 0, 'id': uid, 'isDel': False,
                'createdTime': timeformat.get_now_strformat()}
-    if check.verify_project_format(project):
+    if check.verify_project_format(project) == 0:
         mongo.db.projects.insert_one(project)
         return url_for('get_project', uid=uid)
     # 在产品运行中，已确保接口对上，所有如果 status: -3 证明被攻击或者版本不对
@@ -276,8 +278,17 @@ def get_user_by_name():
 
 
 @api.route('/edit_article', methods=['POST'])
+# @login_required
 def edit_article():
     uid = g.json['id']
     article = g.json['article']
-    mongo.db.articles.update_one({'id': uid}, article)
+    if check.verify_edit_article_format(article) != 0:
+        return jsonify({'status': 0})
+    intro = article['intro']
+    status = article['status']
+    title = article['title']
+    tags = []
+    for t in set(article['tags']):
+        tags.append({'name': t, 'id': t})
+    mongo.db.articles.update_one({'id': uid}, {'$set': {'title': title, 'intro': intro, 'status': status, 'tags': tags}})
     return jsonify({'status': 1})

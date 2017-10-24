@@ -52,3 +52,11 @@ def is_like(item):
     client_ip = info.get_client_ip()
     item['isLiked'] = client_ip in item['likeIPs']
     return item
+
+
+def make_list_element_unique(l):
+    """
+    处理 list 使得元素唯一
+    :return:
+    """
+    return list(set(l))
