@@ -40,7 +40,7 @@ def load_user(oid):
 def login():
     # 如果没有盐，那么可以肯定流程出错
     if 'salt' not in session:
-        abort(404)
+        abort(400)
     # POST. 取出 POST 请求参数
     username = g.json['username']
     psw = g.json['password']
@@ -122,12 +122,16 @@ def upload_post():
     for item in set(t):
         # 因为跨域名问题，所以这里只能够手动拼 url
         tags.append({'name': item, 'id': item})
+    status = g.json['status']
+    # 文章状态检测
+    if not check.verify_article_status(status):
+        return jsonify({'status': -4, 'msg': 'status: {} is not allowed.'.format(status)})
     uid = uuid.uuid4().hex
     post = {'title': g.json['title'], 'tags': tags,
             'intro': g.json.get('intro', ''), 'createdTime': timeformat.get_now_strformat(),
             'content': g.json['content'], 'markdown': g.json['markdown'],
             'author': {'username': g.user.username, 'email': g.user.email, 'id': g.user.username}, 'id': uid,
-            'status': g.json.get('status', 'published'), 'rate': 4,
+            'status': status, 'rate': 4,
             'browseNumber': 0, 'commentNumber': 0, 'likeNumber': 0, 'comments': [], 'likeIPs': []}
     if check.verify_article_format(post) == 0:
         mongo.db.articles.insert_one(post)
@@ -278,17 +282,23 @@ def get_user_by_name():
 
 
 @api.route('/edit_article', methods=['POST'])
-# @login_required
+@login_required
 def edit_article():
     uid = g.json['id']
+    # 首先判断该文章是否是该作者写的
+    result = mongo.db.articles.find_one({'id': uid, 'author.id': g.user.id})
+    if result is None:
+        return jsonify({'status': 0, 'msg': 'You are not the author of article:{}.'.format(uid)})
     article = g.json['article']
     if check.verify_edit_article_format(article) != 0:
         return jsonify({'status': 0})
     intro = article['intro']
     status = article['status']
     title = article['title']
+    content = article['content']
+    markdown = article['markdown']
     tags = []
     for t in set(article['tags']):
         tags.append({'name': t, 'id': t})
-    mongo.db.articles.update_one({'id': uid}, {'$set': {'title': title, 'intro': intro, 'status': status, 'tags': tags}})
-    return jsonify({'status': 1})
+    result = mongo.db.articles.update_one({'id': uid, 'author.id': g.user.id}, {'$set': {'title': title, 'intro': intro, 'status': status, 'tags': tags, 'content': content, 'markdown': markdown}})
+    return jsonify({'status': 1 if result.raw_result['updatedExisting'] else 0})

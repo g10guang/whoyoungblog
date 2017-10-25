@@ -274,6 +274,8 @@ def verify_edit_article_format(article):
         assert isinstance(article['tags'], list)
         for t in article['tags']:
             assert isinstance(t, str)
+        assert isinstance(article['markdown'], str)
+        assert isinstance(article['content'], str)
     except KeyError:
         # 缺少关键字
         return -1
@@ -281,10 +283,11 @@ def verify_edit_article_format(article):
         # 字段类型不对
         return -2
     else:
-        if len(article) == 4:
-            return 0
+        # if len(article) == 4:
+        #     return 0
         # 附带了某些没有定义的字段
-        return -3
+        # return -3
+        return 0
 
 
 def check_str_contain_chinese(words):
