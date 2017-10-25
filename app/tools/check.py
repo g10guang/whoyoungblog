@@ -274,8 +274,8 @@ def verify_edit_article_format(article):
         assert isinstance(article['tags'], list)
         for t in article['tags']:
             assert isinstance(t, str)
-        assert isinstance(article['markdown'], str)
-        assert isinstance(article['content'], str)
+        assert isinstance(article.get('markdown', ''), str)
+        assert isinstance(article.get('content', ''), str)
     except KeyError:
         # 缺少关键字
         return -1

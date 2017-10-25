@@ -300,7 +300,8 @@ def edit_article():
         tags.append({'name': t, 'id': t})
     if 'content' not in article or 'markdown' not in article:
         # 不更新文章内容
-        mongo.db.articles.update_one({'id': uid, 'author.id': g.user.id}, {'$set': {'title': title, 'intro': intro, 'status': status, 'tags': tags}})
+        result = mongo.db.articles.update_one({'id': uid, 'author.id': g.user.id}, {'$set': {'title': title, 'intro': intro, 'status': status, 'tags': tags}})
+        return jsonify({'status': 1 if result.raw_result['updatedExisting'] else 0})
     content = article['content']
     markdown = article['markdown']
     result = mongo.db.articles.update_one({'id': uid, 'author.id': g.user.id}, {'$set': {'title': title, 'intro': intro, 'status': status, 'tags': tags, 'content': content, 'markdown': markdown}})
