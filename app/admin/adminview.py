@@ -295,10 +295,13 @@ def edit_article():
     intro = article['intro']
     status = article['status']
     title = article['title']
-    content = article['content']
-    markdown = article['markdown']
     tags = []
     for t in set(article['tags']):
         tags.append({'name': t, 'id': t})
+    if 'content' not in article or 'markdown' not in article:
+        # 不更新文章内容
+        mongo.db.articles.update_one({'id': uid, 'author.id': g.user.id}, {'$set': {'title': title, 'intro': intro, 'status': status, 'tags': tags}})
+    content = article['content']
+    markdown = article['markdown']
     result = mongo.db.articles.update_one({'id': uid, 'author.id': g.user.id}, {'$set': {'title': title, 'intro': intro, 'status': status, 'tags': tags, 'content': content, 'markdown': markdown}})
     return jsonify({'status': 1 if result.raw_result['updatedExisting'] else 0})
