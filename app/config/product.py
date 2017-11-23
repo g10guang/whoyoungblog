@@ -16,3 +16,6 @@ class ProductConfig(Config):
 
     REMEMBER_COOKIE_DOMAIN = '.whoyoung.me'
 
+    OSS_DOMAIN = 'oss.whoyoung.me'
+
+    OSS_VERIFY_URL = '{domain}/jwt_verify?jwt='.format(domain=OSS_DOMAIN)

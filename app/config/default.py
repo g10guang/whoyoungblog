@@ -49,3 +49,15 @@ class Config:
     MAIL_DEFAULT_SENDER = MAIL_USERNAME
 
     MAIL_DEBUG = False      # 关闭 flask-mail 中连接中产生的大量日志
+
+    # 用于 JWT 加密的 secret_key
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
+
+    # JWT 的生成方
+    JWT_ISS = 'whoyoungblog'
+
+    # JWT 的接受者
+    JWT_AUD = 'oss'
+
+
+

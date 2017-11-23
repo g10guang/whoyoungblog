@@ -8,7 +8,7 @@ import re
 
 USER_STATUS_SET = {'frozen', 'deleted', 'normal'}
 
-ARTICLE_STATUS_SET = {'craft', 'deleted', 'published'}
+ARTICLE_STATUS_SET = {'draft', 'deleted', 'published'}
 
 EMAIL_REGEX = r'[^@]+@[^@]+\.[^@]+'
 

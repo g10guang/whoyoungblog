@@ -225,11 +225,11 @@ def set_article_status():
     uid = g.json['id']
     status = g.json['status']
     if check.verify_article_status(status):
-        mongo.db.articles.update_one({'id': uid, 'author.username': g.user.username}, {'$set': {'status': status}})
+        mongo.db.articles.update_one({'id': uid, 'author.id': g.user.id}, {'$set': {'status': status}})
         return jsonify({'status': 1})
     else:
         # status not allowed
-        return jsonify({'status': 1})
+        return jsonify({'status': 0})
 
 
 @api.route('/get_article_list')
