@@ -55,6 +55,7 @@ from app.store import storeview
 from app.search import searchview
 from app.views import api
 from app.store import store
+from app.admin import verify
 
 # Note: register blueprint should after import the views.
 app.register_blueprint(api)
