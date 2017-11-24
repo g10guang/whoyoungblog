@@ -18,4 +18,4 @@ class ProductConfig(Config):
 
     OSS_DOMAIN = 'oss.whoyoung.me'
 
-    OSS_VERIFY_URL = '{domain}/jwt_verify?jwt='.format(domain=OSS_DOMAIN)
+    OSS_VERIFY_URL = 'https://{domain}/jwt_verify?jwt='.format(domain=OSS_DOMAIN)

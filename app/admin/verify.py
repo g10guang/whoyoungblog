@@ -8,7 +8,7 @@ import jwt
 from flask_login import login_required
 import datetime
 from flask import g
-from flask import redirect
+from flask import redirect, url_for
 
 
 @api.route('/verify_oss')
