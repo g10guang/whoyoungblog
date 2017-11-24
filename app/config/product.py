@@ -4,6 +4,7 @@
 # 2017-09-10 18:23
 
 from app.config.default import Config
+import os
 
 
 class ProductConfig(Config):
@@ -16,6 +17,6 @@ class ProductConfig(Config):
 
     REMEMBER_COOKIE_DOMAIN = '.whoyoung.me'
 
-    OSS_DOMAIN = 'oss.whoyoung.me'
+    OSS_DOMAIN = os.environ.get('OSS_DOMAIN')
 
     OSS_VERIFY_URL = 'https://{domain}/jwt_verify?jwt='.format(domain=OSS_DOMAIN)
